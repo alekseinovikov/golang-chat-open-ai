@@ -2,11 +2,32 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"github.com/sashabaranov/go-openai"
+	"log"
 	"os"
 	"strings"
 )
+
+func run(apiKey string) string {
+	client := openai.NewClient(apiKey)
+	messages := buildMessageBundle()
+
+	resp, err := client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model:    openai.GPT3Dot5Turbo,
+			Messages: messages,
+		},
+	)
+
+	if err != nil {
+		log.Fatalf("ChatCompletion error: %v\n", err)
+	}
+
+	return resp.Choices[0].Message.Content
+}
 
 func buildMessageBundle() []openai.ChatCompletionMessage {
 	messages := make([]openai.ChatCompletionMessage, 0)

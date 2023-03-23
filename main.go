@@ -1,31 +1,24 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"github.com/sashabaranov/go-openai"
-	"log"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
 	"os"
 )
 
 func main() {
-	apiKey := os.Getenv("OPENAI_API_KEY")
-	client := openai.NewClient(apiKey)
-	messages := buildMessageBundle()
+	_ = os.Getenv("OPENAI_API_KEY")
+	a := app.New()
+	w := a.NewWindow("Open AI Code Chat")
 
-	resp, err := client.CreateChatCompletion(
-		context.Background(),
-		openai.ChatCompletionRequest{
-			Model:    openai.GPT3Dot5Turbo,
-			Messages: messages,
-		},
-	)
+	hello := widget.NewLabel("Hello Fyne!")
+	w.SetContent(container.NewVBox(
+		hello,
+		widget.NewButton("Hi!", func() {
+			hello.SetText("Welcome :)")
+		}),
+	))
 
-	if err != nil {
-		log.Fatalf("ChatCompletion error: %v\n", err)
-		return
-	}
-
-	content := resp.Choices[0].Message.Content
-	fmt.Println(content)
+	w.ShowAndRun()
 }
