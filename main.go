@@ -1,24 +1,17 @@
 package main
 
 import (
-	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"golang-chat-open-ai/chat"
+	"golang-chat-open-ai/file"
+	"golang-chat-open-ai/ui"
 	"os"
 )
 
 func main() {
-	_ = os.Getenv("OPENAI_API_KEY")
-	a := app.New()
-	w := a.NewWindow("Open AI Code Chat")
+	apiKey := os.Getenv("OPENAI_API_KEY")
 
-	hello := widget.NewLabel("Hello Fyne!")
-	w.SetContent(container.NewVBox(
-		hello,
-		widget.NewButton("Hi!", func() {
-			hello.SetText("Welcome :)")
-		}),
-	))
+	fileService := file.NewFileService()
+	chatService := chat.NewChatService(fileService)
 
-	w.ShowAndRun()
+	ui.NewUiService(apiKey, chatService).Run()
 }
