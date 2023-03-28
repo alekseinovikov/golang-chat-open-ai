@@ -26,38 +26,47 @@ func (u *uiService) Run() {
 	w := a.NewWindow("Open AI Code Chat")
 	w.Resize(fyne.NewSize(800, 600))
 
-	w.SetContent(container.New(
-		layout.NewVBoxLayout(),
-		u.header(),
-		u.body(),
-		u.footer(),
-	))
+	w.SetContent(
+		container.New(
+			layout.NewVBoxLayout(),
+			u.form(),
+		),
+	)
 
 	w.ShowAndRun()
 }
 
-func (u *uiService) header() *fyne.Container {
-	apiKeyLabel := widget.NewLabel("Api Key:")
+func (u *uiService) form() *widget.Form {
+	form := widget.NewForm()
+
 	apiKeyEntry := widget.NewEntry()
 	apiKeyEntry.SetPlaceHolder("Enter your api key here")
-	apiKeyEntry.OnChanged = func(newValue string) {
-		u.apiKey = newValue
-		apiKeyLabel.Text = u.apiKey
-		apiKeyLabel.Refresh()
+
+	welcomeMessageEntry := widget.NewMultiLineEntry()
+	welcomeMessageEntry.SetPlaceHolder(u.chatService.GetDefaultWelcomeMessage())
+
+	questionEntry := widget.NewMultiLineEntry()
+	questionEntry.SetPlaceHolder("Please, explain me what the code does.")
+
+	resultMessageEntry := widget.NewMultiLineEntry()
+	resultMessageEntry.SetPlaceHolder("Result will be here.")
+
+	form.Append("Api Key", apiKeyEntry)
+	form.Append("Welcome Message", welcomeMessageEntry)
+	form.Append("Question", questionEntry)
+	form.Append("Result", resultMessageEntry)
+	form.OnSubmit = func() {
+		u.chatService.SetApiKey(apiKeyEntry.Text)
+		result, err := u.chatService.Run(welcomeMessageEntry.Text, questionEntry.Text)
+		if err != nil {
+			resultMessageEntry.SetText(err.Error())
+		} else {
+			resultMessageEntry.SetText(result)
+		}
 	}
 
-	return container.New(layout.NewHBoxLayout(),
-		layout.NewSpacer(),
-		container.New(layout.NewMaxLayout(), apiKeyLabel),
-		container.New(layout.NewMaxLayout(), apiKeyEntry),
-		layout.NewSpacer(),
-	)
-}
+	form.SubmitText = "Ask Chat GPT"
+	form.Refresh()
 
-func (u *uiService) body() *fyne.Container {
-	return container.NewHBox()
-}
-
-func (u *uiService) footer() *fyne.Container {
-	return container.NewHBox()
+	return form
 }
