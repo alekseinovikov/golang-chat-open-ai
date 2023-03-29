@@ -3,6 +3,8 @@ package file
 import (
 	"golang-chat-open-ai/core"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -13,30 +15,28 @@ func NewFileService() core.FileService {
 	return &fileService{}
 }
 
-func (f *fileService) LoadAllTextFilesRecursivelyFromCurrentDirectory(fileExtensions []string) ([]core.FileContent, error) {
-	files, err := ioutil.ReadDir("./")
-	if err != nil {
-		return nil, err
-	}
-
+func (f *fileService) LoadAllTextFilesRecursivelyFromCurrentDirectory(path string, fileExtensions []string) ([]core.FileContent, error) {
 	var textFiles []core.FileContent
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
 
-		if hasAnySupportedSuffix(file.Name(), fileExtensions) {
-			bytes, err := ioutil.ReadFile(file.Name())
+	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() && hasAnySupportedSuffix(info.Name(), fileExtensions) {
+			bytes, err := ioutil.ReadFile(path)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			content := string(bytes)
 			textFiles = append(textFiles, core.FileContent{
-				Name:    file.Name(),
+				Name:    info.Name(),
 				Content: content,
 			})
 		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return textFiles, nil
